@@ -1,0 +1,54 @@
+"""
+Alert generation. A claim earns an Alert when it's BOTH high-priority
+(needs relief-org attention, per priority_scorer.py's own definition of
+priority as attention-worthiness independent of truth) AND either well-
+supported (reliability HIGH/MEDIUM) or confidently FAKE -- a confidently-
+fake, high-priority claim is exactly as alert-worthy as a confidently-true
+one, since it needs to be debunked before it spreads. This mirrors
+priority_scorer.py's own stated philosophy precisely (see that module's
+docstring: "a highly specific, severe-sounding FAKE claim still needs
+urgent attention").
+
+ALERT_SCOPE_NOTE (defined once, in app/db/models.py, imported everywhere
+an alert is shown) is included in every response so the "no emergency
+services contacted" caveat can never drift out of sync between the API
+and the UI.
+"""
+from app.db.models import ALERT_SCOPE_NOTE, Alert, Claim
+
+CONFIDENT_FAKE_THRESHOLD = 0.65  # matches UNVERIFIED_CONFIDENCE_THRESHOLD in misinformation_classifier.py
+
+
+def should_alert(claim: Claim) -> bool:
+    if claim.priority != "HIGH":
+        return False
+    if claim.reliability_band in ("HIGH", "MEDIUM"):
+        return True
+    if claim.classification == "FAKE" and claim.confidence >= CONFIDENT_FAKE_THRESHOLD:
+        return True
+    return False
+
+
+def build_alert_for_claim(claim: Claim) -> Alert:
+    reason_parts = [
+        f"Priority is HIGH (score={claim.priority_score}) for a '{claim.disaster_type}' claim.",
+    ]
+    if claim.classification == "FAKE" and claim.confidence >= CONFIDENT_FAKE_THRESHOLD:
+        reason_parts.append(
+            f"Classified FAKE with {claim.confidence:.0%} confidence -- flagged so it can be "
+            f"debunked before it spreads further, independent of the reliability score below."
+        )
+    if claim.reliability_band:
+        reason_parts.append(f"Reliability is {claim.reliability_band} (score={claim.reliability_score}/100).")
+    reason_parts.append(ALERT_SCOPE_NOTE)
+
+    # No claim_id set here deliberately -- the caller appends this to
+    # claim.alerts (an unpersisted Claim may not have an id yet); the
+    # relationship sets the FK automatically on flush/commit.
+    return Alert(level=claim.priority, reason_text=" ".join(reason_parts))
+
+
+def maybe_create_alert(claim: Claim) -> Alert | None:
+    if not should_alert(claim):
+        return None
+    return build_alert_for_claim(claim)

@@ -30,6 +30,7 @@ from utils.reliability_scorer import score_reliability  # noqa: E402
 from app.db.models import Claim, Location, Evidence
 from app.external_feeds.evidence_matcher import ClaimGeoContext, find_matches
 from app.external_feeds.scheduler import get_cached_events
+from app.services.alerts_service import maybe_create_alert
 
 
 def analyze_and_persist(
@@ -145,6 +146,10 @@ def analyze_and_persist(
     claim.reliability_score = reliability.score
     claim.reliability_band = reliability.band
     claim.reliability_reasons = reliability.reasons
+
+    alert = maybe_create_alert(claim)
+    if alert is not None:
+        claim.alerts.append(alert)
 
     db.add(claim)
     db.commit()
