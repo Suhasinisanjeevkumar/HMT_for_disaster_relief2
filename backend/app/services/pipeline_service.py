@@ -24,6 +24,8 @@ from sqlalchemy.orm import Session
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "src"))
 from analyze_claim import analyze_claim  # noqa: E402
 from location.geocode_lookup import get_coordinates  # noqa: E402
+from verification.source_verifier import MATCH_THRESHOLD  # noqa: E402
+from utils.reliability_scorer import score_reliability  # noqa: E402
 
 from app.db.models import Claim, Location, Evidence
 
@@ -85,6 +87,28 @@ def analyze_and_persist(
                 # not just in code comments.
             )
         )
+
+    # Reliability scoring needs both the stored-corpus result (above) and
+    # live external evidence -- the latter isn't wired up until
+    # app/external_feeds/ (evidence_matcher.py) exists, so live_evidence_*
+    # are 0/None for now, which correctly yields "no live evidence found"
+    # rather than a fabricated number. Once evidence_matcher.py lands,
+    # this call site is the one place that needs updating to pass real
+    # live-feed counts + type-coherence.
+    location_level = result["location"]["match_level"] if result["location"] else None
+    reliability = score_reliability(
+        misinfo_confidence=result["confidence_raw"],
+        verification_matched=result["verification"]["matched"],
+        verification_similarity=result["verification"]["similarity_raw"],
+        verification_threshold=MATCH_THRESHOLD,
+        live_evidence_count=0,
+        live_evidence_source_count=0,
+        location_level=location_level,
+        evidence_type_matches=None,
+    )
+    claim.reliability_score = reliability.score
+    claim.reliability_band = reliability.band
+    claim.reliability_reasons = reliability.reasons
 
     db.add(claim)
     db.commit()
