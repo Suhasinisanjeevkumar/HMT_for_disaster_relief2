@@ -1,6 +1,8 @@
 # Data sources — verified working download commands
 
-These were tested and confirmed working in this session. No authentication needed for any of them.
+These were tested and confirmed working in the session that produced them. Most need no authentication;
+where one does (ReliefWeb, and the "still needed" list below), it's called out explicitly rather than
+glossed over.
 
 ## PHEME veracity dataset (1.1GB extracted)
 ```bash

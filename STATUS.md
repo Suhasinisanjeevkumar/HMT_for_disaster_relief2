@@ -47,6 +47,64 @@ I can't authenticate as you, so these need your action:
 
 Once you have any of these, send them my way (or just tell me you've got them) and I'll write the actual collection runs against the real APIs rather than the generic skeleton scripts.
 
+## Session: 2026-08-29 — full-stack rebuild
+
+What follows is real, verified progress from this session — everything below actually ran (backend/frontend
+booted, pytest/vitest suites executed, `docker compose up` tested end-to-end, a real headless-browser session
+clicked through all 8 pages). Not projections.
+
+### What was built
+
+- **FastAPI + SQLAlchemy backend** (`backend/`) wrapping the existing, unmodified `analyze_claim()` pipeline —
+  never reimplemented, verified by a regression test that diffs API output against a direct call to the same
+  function (`backend/tests/test_api_claims.py::test_api_matches_cli_pipeline_output`).
+- **Offline location coordinates** (`src/location/geocode_lookup.py`) from two new committed CSVs (top-400
+  Indian cities via GeoNames, all state/UT centroids promoted from the old `dashboard/app.py` dict). No live
+  geocoding call anywhere in the request path.
+- **Baseline model comparison** (`src/misinformation/compare_baselines.py`): Random Forest and a linear-kernel
+  SVM trained on the exact same split/vectorizer as the shipped Logistic Regression. Real result: SVM scored
+  higher (macro F1 0.9943 vs. 0.9885) but the 0.0057 margin didn't clear the pre-registered 0.01 adoption
+  threshold, so **Logistic Regression stays shipped** — see `MODEL_EVALUATION.md`.
+- **Reliability scoring** (`src/utils/reliability_scorer.py`) — new, rule-based, documented like
+  `priority_scorer.py`, combining ML confidence + stored/live evidence + location specificity + type coherence.
+- **Live evidence feeds** (`backend/app/external_feeds/`): USGS and GDACS are real and verified against their
+  live endpoints. **ReliefWeb was planned as a third no-key source and turned out not to be** — its v1 API is
+  decommissioned and v2 requires an approved `appname` (HTTP 403 otherwise). Its fetch/parse code is real and
+  tested via mocks, but reports `"not_configured"` status honestly rather than being silently disabled or faked
+  as working.
+- **Alerts, stats/map endpoints, historical seed data** (1002 rows from `ifnd_full.parquet`, idempotent).
+- **React + TypeScript frontend** (`frontend/`) — all 8 spec pages, Recharts + Leaflet, verified in a real
+  headless-Chromium session (not just `tsc`/build) against the live backend: zero console errors across all
+  routes, the spec's own example claim produced the expected Flood/TRUE/Whitefield result, and a live HIGH-
+  priority+MEDIUM-reliability submission produced a real, acknowledgeable Alert.
+- **Docker packaging** — `docker compose up --build` tested for real, both containers, including a genuine
+  cross-origin frontend→backend request against the dockerized frontend.
+
+### Bugs found and fixed during this session (not just written and assumed correct)
+
+1. `Base.metadata.create_all()` created **zero tables** on first boot — `main.py` never imported `app.db.models`,
+   so SQLAlchemy had no tables registered on `Base.metadata`. Fixed with an explicit import.
+2. `scikit-learn` was silently 1.9.0 in a fresh venv while the shipped `.joblib` models were pickled under 1.8.0
+   (visible only as an `InconsistentVersionWarning`) — pinned in `requirements.txt`.
+3. Historical claim text from IFND.csv renders as mojibake (e.g. em-dashes/curly-quotes as control characters) —
+   the source file is actually cp1252 but `build_baseline.py` (frozen, not touched) reads it as latin-1. Fixed as
+   a display-only repair in `seed_historical_claims.py` (byte round-trip re-decode), not by touching
+   `build_baseline.py` or any trained artifact.
+4. Docker: bind-mounting a host `hmt.db` file that didn't exist yet made Docker silently create a **directory**
+   there instead, breaking SQLite with "unable to open database file." Fixed with a named volume for the
+   containing directory instead of a single-file bind mount.
+5. ReliefWeb's real API schema/auth requirements didn't match the original plan (see above) — discovered by
+   actually calling the live endpoint rather than assuming the plan's premise, and corrected in the same session
+   rather than shipped as a silent lie.
+
+### What still needs your action (unchanged from before, plus one addition)
+
+1. Reddit OAuth app (client_id/secret)
+2. Telegram API credentials (api_id/api_hash)
+3. Google Fact Check Tools API key
+4. **New**: a ReliefWeb API `appname` approval request — https://apidoc.reliefweb.int/parameters#appname (free,
+   but requires actually submitting the request; the integration code is ready and waiting)
+
 ## 5. Files in this session's project folder
 ```
 hyperlocal-misinfo-tracker/
