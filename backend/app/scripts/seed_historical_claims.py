@@ -41,6 +41,23 @@ PARQUET_PATH = os.path.join(
 )
 
 
+def _fix_mojibake(text: str) -> str:
+    """IFND.csv is actually cp1252-encoded, but build_baseline.py (frozen,
+    not touched here -- see module docstring) reads it with
+    encoding="latin-1", which maps bytes 1:1 instead of decoding cp1252's
+    printable characters in the 0x80-0x9F range (em-dashes, curly quotes,
+    etc.) -- those come through as literal control characters that render
+    as boxes/underscores in a browser. Round-tripping the already-loaded
+    string through the byte values it actually came from and re-decoding
+    as cp1252 repairs it for DISPLAY. This does not touch build_baseline.py,
+    the trained model, or the parquet files it produced -- purely a
+    presentation fix in this seed script."""
+    try:
+        return text.encode("latin-1").decode("cp1252")
+    except (UnicodeEncodeError, UnicodeDecodeError):
+        return text  # text with genuine non-latin-1 characters -- leave as-is
+
+
 def _parse_date(raw) -> datetime:
     if isinstance(raw, str) and raw:
         try:
@@ -78,7 +95,7 @@ def seed(db) -> int:
         )
 
         claim = Claim(
-            text=row["Statement"],
+            text=_fix_mojibake(row["Statement"]),
             source="ifnd_dataset",
             source_url=None,
             submitted_at=_parse_date(row.get("Date")),
