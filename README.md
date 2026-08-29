@@ -138,6 +138,19 @@ hmt-complete-project_1/
 └── requirements.txt
 ```
 
+## Testing
+
+```bash
+# backend + ML/location/scoring tests (offline, mocked network calls)
+python3 -m pytest src/ backend/
+
+# the 3 real feed endpoints, hit for real -- excluded from the default run
+python3 -m pytest backend/tests/test_external_feeds_live.py -m network
+
+# frontend
+cd frontend && npm run test && npx tsc -b && npm run lint
+```
+
 ## Not built (deliberately, per project scope)
 
 - Live Reddit/Telegram ingestion (needs your API credentials)
