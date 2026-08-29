@@ -1,0 +1,86 @@
+{
+  "dataset": {
+    "path": "data/processed/ifnd_disaster_subset.parquet",
+    "n_rows": 894,
+    "train_size": 715,
+    "test_size": 179,
+    "random_state": 42
+  },
+  "vectorizer": {
+    "max_features": 8000,
+    "ngram_range": [
+      1,
+      2
+    ],
+    "min_df": 2,
+    "stop_words": "english"
+  },
+  "selection_rule": "Pick by macro F1. A challenger must beat logistic_regression's macro F1 by >= 0.01 to be adopted; otherwise logistic_regression ships (see this script's module docstring).",
+  "models": {
+    "logistic_regression": {
+      "accuracy": 0.9888268156424581,
+      "macro_f1": 0.9885256410256411,
+      "weighted_f1": 0.9888060449792293,
+      "fake_precision": 1.0,
+      "fake_recall": 0.9736842105263158,
+      "fake_f1": 0.9866666666666667,
+      "true_precision": 0.9809523809523809,
+      "true_recall": 1.0,
+      "true_f1": 0.9903846153846154,
+      "confusion_matrix": [
+        [
+          74,
+          2
+        ],
+        [
+          0,
+          103
+        ]
+      ]
+    },
+    "random_forest": {
+      "accuracy": 0.9888268156424581,
+      "macro_f1": 0.9885256410256411,
+      "weighted_f1": 0.9888060449792293,
+      "fake_precision": 1.0,
+      "fake_recall": 0.9736842105263158,
+      "fake_f1": 0.9866666666666667,
+      "true_precision": 0.9809523809523809,
+      "true_recall": 1.0,
+      "true_f1": 0.9903846153846154,
+      "confusion_matrix": [
+        [
+          74,
+          2
+        ],
+        [
+          0,
+          103
+        ]
+      ]
+    },
+    "svm_linear": {
+      "accuracy": 0.994413407821229,
+      "macro_f1": 0.9942732827846562,
+      "weighted_f1": 0.9944084033556372,
+      "fake_precision": 1.0,
+      "fake_recall": 0.9868421052631579,
+      "fake_f1": 0.9933774834437086,
+      "true_precision": 0.9903846153846154,
+      "true_recall": 1.0,
+      "true_f1": 0.9951690821256038,
+      "confusion_matrix": [
+        [
+          75,
+          1
+        ],
+        [
+          0,
+          103
+        ]
+      ]
+    }
+  },
+  "winner": "logistic_regression",
+  "margin_over_logreg": 0.0
+}
