@@ -1,0 +1,57 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    volumes:
+      - ./data:/app/data:ro
+      - ./outputs:/app/outputs:ro
+      # A named volume, not a bind-mounted single file -- bind-mounting a
+      # host file that doesn't exist yet makes Docker silently create a
+      # DIRECTORY at that path instead (a well-known Docker gotcha),
+      # which then breaks SQLite with "unable to open database file".
+      # A named volume for the containing directory sidesteps that
+      # entirely and still persists data across `docker compose down`.
+      - hmt_db_data:/app/backend/db
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=sqlite:////app/backend/db/hmt.db
+      - CORS_ORIGINS=http://localhost:5173,http://localhost:8080
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: http://localhost:8000
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+volumes:
+  hmt_db_data:
+
+# --- Postgres-ready, not enabled by default (SQLite is the dev default
+# per spec) ---------------------------------------------------------------
+# To switch: uncomment the service below, set DATABASE_URL in .env to
+# postgresql+psycopg2://hmt:hmt@postgres:5432/hmt (drop the DATABASE_URL
+# override above), add psycopg2-binary to requirements.txt, and drop the
+# hmt_db_data volume -- no application code changes needed, SQLAlchemy's
+# engine is already constructed from DATABASE_URL alone (see
+# backend/app/db/session.py).
+#
+#   postgres:
+#     image: postgres:16-alpine
+#     environment:
+#       POSTGRES_USER: hmt
+#       POSTGRES_PASSWORD: hmt
+#       POSTGRES_DB: hmt
+#     volumes:
+#       - pgdata:/var/lib/postgresql/data
+#     ports:
+#       - "5432:5432"
+#
+#   pgdata:
