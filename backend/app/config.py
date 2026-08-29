@@ -20,6 +20,10 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./hmt.db"
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
 
+    # Off by default in tests (see backend/conftest.py) so the pytest suite
+    # never makes real network calls or spins up a background thread.
+    enable_feed_scheduler: bool = True
+
     reliefweb_appname: str = "hmt-capstone-project"
 
     # Future Enhancement -- credentialed sources. None of these have real

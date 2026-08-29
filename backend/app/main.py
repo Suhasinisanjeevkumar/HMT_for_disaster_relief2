@@ -16,7 +16,8 @@ from app.config import settings
 from app.db.base import Base
 from app.db.session import engine
 from app.db import models  # noqa: F401 -- import registers all tables on Base.metadata before create_all runs
-from app.routers import health, claims
+from app.external_feeds.scheduler import start_scheduler, stop_scheduler
+from app.routers import claims, feeds, health
 
 logging.basicConfig(level=logging.INFO)
 
@@ -25,7 +26,11 @@ logging.basicConfig(level=logging.INFO)
 async def lifespan(app: FastAPI):
     # create_all, not Alembic -- see the docstring in app/db/models.py for why.
     Base.metadata.create_all(bind=engine)
+    if settings.enable_feed_scheduler:
+        start_scheduler()
     yield
+    if settings.enable_feed_scheduler:
+        stop_scheduler()
 
 
 app = FastAPI(
@@ -47,3 +52,4 @@ app.add_middleware(
 
 app.include_router(health.router)
 app.include_router(claims.router)
+app.include_router(feeds.router)

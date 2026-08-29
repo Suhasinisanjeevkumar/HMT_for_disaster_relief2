@@ -19,3 +19,10 @@ for path in (BACKEND_DIR, SRC_DIR):
 
 # Force a fresh, disposable test DB rather than touching the dev hmt.db.
 os.environ.setdefault("DATABASE_URL", "sqlite:///./test_hmt.db")
+
+# Never let the pytest suite start the real background feed scheduler --
+# it would make live network calls and spin up a thread outside pytest's
+# control, which has no place in a default (offline-safe) test run. Feed
+# fetch logic itself is tested directly with mocked requests.get calls,
+# see backend/tests/test_external_feeds.py.
+os.environ.setdefault("ENABLE_FEED_SCHEDULER", "false")

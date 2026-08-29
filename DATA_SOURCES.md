@@ -34,6 +34,30 @@ before trusting it on your own Hindi/regional-language data.
 - Reddit (PRAW) — needs OAuth app approval
 - Telegram (Telethon) — needs api_id/api_hash from my.telegram.org
 - Google Fact Check Tools API — needs a free API key from Google Cloud Console
+- ReliefWeb API — see the correction below. Free, but needs a requested/
+  approved appname, not just any string.
+
+## Live evidence feeds (full-stack rebuild)
+
+Verified directly against each live endpoint while building this — two
+turned out to be genuinely no-key/no-signup as planned, one did not:
+
+- **USGS earthquakes** — `https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/significant_week.geojson`
+  (note: plural "earthquakes" — the commonly-guessed singular path 404s).
+  No key. Confirmed working 2026-08-29.
+- **GDACS** — `https://www.gdacs.org/xml/rss.xml`. Public domain, no key.
+  Confirmed working 2026-08-29 (469 items, real India flood events present
+  in the feed at test time).
+- **ReliefWeb — CORRECTION**: originally planned as a third no-key
+  source. Its v1 API is fully decommissioned (HTTP 410 on any v1 call).
+  Its v2 API requires an **approved** `appname` — an arbitrary string gets
+  HTTP 403 "You are not using an approved appname," with a link to
+  request one at https://apidoc.reliefweb.int/parameters#appname. So this
+  source's fetch/parse code is real and tested (see
+  `backend/app/external_feeds/reliefweb_feed.py` and its mocked tests),
+  but it is currently inactive — reported as feed status
+  `"not_configured"`, same as the fully-credentialed stubs — until an
+  approved appname is obtained and set as `RELIEFWEB_APPNAME` in `.env`.
 
 ## Location centroid datasets (full-stack rebuild)
 

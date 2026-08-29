@@ -28,6 +28,8 @@ from verification.source_verifier import MATCH_THRESHOLD  # noqa: E402
 from utils.reliability_scorer import score_reliability  # noqa: E402
 
 from app.db.models import Claim, Location, Evidence
+from app.external_feeds.evidence_matcher import ClaimGeoContext, find_matches
+from app.external_feeds.scheduler import get_cached_events
 
 
 def analyze_and_persist(
@@ -52,8 +54,11 @@ def analyze_and_persist(
         reason=result["reason"],
     )
 
+    primary_coords = None
     for loc in result["all_locations"]:
         coords = get_coordinates(loc["city"], loc["state"])
+        if loc["is_primary"]:
+            primary_coords = coords
         claim.locations.append(
             Location(
                 matched_text=loc["text"],
@@ -88,23 +93,54 @@ def analyze_and_persist(
             )
         )
 
-    # Reliability scoring needs both the stored-corpus result (above) and
-    # live external evidence -- the latter isn't wired up until
-    # app/external_feeds/ (evidence_matcher.py) exists, so live_evidence_*
-    # are 0/None for now, which correctly yields "no live evidence found"
-    # rather than a fabricated number. Once evidence_matcher.py lands,
-    # this call site is the one place that needs updating to pass real
-    # live-feed counts + type-coherence.
+    # Live external evidence -- matched against the in-memory cache the
+    # background scheduler (app/external_feeds/scheduler.py) refreshes
+    # periodically. If the scheduler hasn't run yet (e.g. disabled in
+    # tests) the cache is simply empty, which correctly yields "no live
+    # evidence found" rather than a fabricated match.
     location_level = result["location"]["match_level"] if result["location"] else None
+    live_matches = []
+    evidence_type_matches = None
+    if primary_coords is not None:
+        ctx = ClaimGeoContext(
+            disaster_type=result["disaster_type"],
+            latitude=primary_coords.latitude,
+            longitude=primary_coords.longitude,
+            location_level=location_level,
+            country_hint="India",
+            submitted_at=claim.submitted_at,
+        )
+        cached_events = get_cached_events()
+        live_matches = find_matches(ctx, cached_events, require_type=True)
+        if live_matches:
+            evidence_type_matches = True
+        elif find_matches(ctx, cached_events, require_type=False):
+            # something geographically/recency-relevant happened nearby,
+            # just not of the claimed disaster type -- see
+            # evidence_matcher.find_matches' docstring
+            evidence_type_matches = False
+
+    for event in live_matches:
+        claim.evidence.append(
+            Evidence(
+                source=event.source,
+                url=event.url,
+                evidence_type="live_feed_match",
+                description=event.description or event.title,
+                event_timestamp=event.event_timestamp,
+                matched_confidence=1.0,  # binary match (type+geo+recency all satisfied), not a similarity score
+            )
+        )
+
     reliability = score_reliability(
         misinfo_confidence=result["confidence_raw"],
         verification_matched=result["verification"]["matched"],
         verification_similarity=result["verification"]["similarity_raw"],
         verification_threshold=MATCH_THRESHOLD,
-        live_evidence_count=0,
-        live_evidence_source_count=0,
+        live_evidence_count=len(live_matches),
+        live_evidence_source_count=len({e.source for e in live_matches}),
         location_level=location_level,
-        evidence_type_matches=None,
+        evidence_type_matches=evidence_type_matches,
     )
     claim.reliability_score = reliability.score
     claim.reliability_band = reliability.band
