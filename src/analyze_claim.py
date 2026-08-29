@@ -71,6 +71,7 @@ def analyze_claim(text: str) -> dict:
                 "text": m.matched_text, "state": m.state, "level": m.match_level,
                 "locality": m.locality, "city": m.city, "district": m.district,
                 "match_type": m.match_type, "confidence": m.confidence,
+                "pin_code": m.pincode,
                 "is_primary": bool(loc_best) and _best_key(m) == best_key,
             }
             for m in location.locations

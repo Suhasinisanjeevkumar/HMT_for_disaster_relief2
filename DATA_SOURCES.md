@@ -34,3 +34,33 @@ before trusting it on your own Hindi/regional-language data.
 - Reddit (PRAW) — needs OAuth app approval
 - Telegram (Telethon) — needs api_id/api_hash from my.telegram.org
 - Google Fact Check Tools API — needs a free API key from Google Cloud Console
+
+## Location centroid datasets (full-stack rebuild)
+
+Neither of these existed in the original prototype — the gazetteer
+(`pincodes_kishorek.csv`) has no lat/lon columns at all, so the Streamlit
+dashboard's map was state-centroid-only via a hardcoded dict. These two
+CSVs are what `src/location/geocode_lookup.py` reads instead (offline,
+no network call at request time — see that module's docstring).
+
+**`data/external/city_centroids.csv`** — top 400 Indian cities by
+population, from GeoNames' free `cities1000` dump (every populated place
+worldwide with ≥1000 people) + `admin1CodesASCII.txt` (state-code→name
+mapping). CC BY 4.0, GeoNames.org. Downloaded 2026-08-29.
+```bash
+curl -sL -o cities1000.zip https://download.geonames.org/export/dump/cities1000.zip
+curl -sL -o admin1CodesASCII.txt https://download.geonames.org/export/dump/admin1CodesASCII.txt
+```
+Regenerate via `python3 src/location/build_city_centroids.py` (needs
+network access; nothing else in the app does).
+
+**`data/external/state_centroids.csv`** — 32 state/UT centroids, promoted
+verbatim from `dashboard/app.py`'s original hardcoded `STATE_COORDS` dict
+(hand-verified state-capital coordinates, not derived from any external
+dataset). No new sourcing risk — this is a straight move, not new data.
+
+**Known, permanent limitation** (state this plainly anywhere coordinates
+are shown): a locality-level match renders at its *city's* centroid, and
+a city with no match falls back to its *state's* centroid — never a true
+street-level point. There is deliberately no live geocoding call in the
+request path (see `geocode_lookup.py`).

@@ -62,6 +62,11 @@ class GazetteerEntry:
     district: str
     state: str
     country: str = "India"
+    # Additive field: the CSV has a real Pincode column that was previously
+    # discarded on load. Only ever populated for exact locality matches --
+    # there is no reliable pincode for a city/district/state-level match,
+    # which could span many pincodes.
+    pincode: str = ""
 
 
 class Gazetteer:
@@ -95,7 +100,8 @@ class Gazetteer:
                 city = (row.get("City") or "").strip() or locality
                 district = (row.get("DistrictsName") or "").strip()
                 state = state.strip()
-                entry = GazetteerEntry(locality=locality, city=city, district=district, state=state)
+                pincode = (row.get("Pincode") or "").strip()
+                entry = GazetteerEntry(locality=locality, city=city, district=district, state=state, pincode=pincode)
                 self.entries.append(entry)
 
                 loc_key = _normalize(locality)

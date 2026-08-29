@@ -57,6 +57,7 @@ class LocationMatch:
     state: Optional[str] = None
     country: str = "India"
     text_order: int = 0  # position candidate first appeared in the input text, used as a tiebreak
+    pincode: Optional[str] = None  # only ever set for exact locality matches -- see GazetteerEntry.pincode
 
 
 @dataclass
@@ -131,7 +132,8 @@ class GazetteerLocationExtractor(LocationExtractor):
         loc = self.gz.lookup_locality(candidate)
         if loc:
             return LocationMatch(candidate, "locality", "exact", 1.0,
-                                  loc.locality, loc.city, loc.district, loc.state)
+                                  loc.locality, loc.city, loc.district, loc.state,
+                                  pincode=(loc.pincode or None))
 
         city = self.gz.lookup_city(candidate)
         if city:

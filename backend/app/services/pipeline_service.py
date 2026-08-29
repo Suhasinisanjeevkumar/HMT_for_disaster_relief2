@@ -23,6 +23,7 @@ from sqlalchemy.orm import Session
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "src"))
 from analyze_claim import analyze_claim  # noqa: E402
+from location.geocode_lookup import get_coordinates  # noqa: E402
 
 from app.db.models import Claim, Location, Evidence
 
@@ -50,6 +51,7 @@ def analyze_and_persist(
     )
 
     for loc in result["all_locations"]:
+        coords = get_coordinates(loc["city"], loc["state"])
         claim.locations.append(
             Location(
                 matched_text=loc["text"],
@@ -59,9 +61,11 @@ def analyze_and_persist(
                 city=loc["city"],
                 district=loc["district"],
                 state=loc["state"],
+                pin_code=loc["pin_code"],
+                latitude=coords.latitude,
+                longitude=coords.longitude,
+                coordinate_precision=coords.precision,
                 is_primary=loc["is_primary"],
-                # pin_code / latitude / longitude are filled in by Phase 4's
-                # geocode_lookup wiring -- left NULL until then.
             )
         )
 
