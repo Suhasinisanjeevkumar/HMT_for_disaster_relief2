@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Disaster Claims — Evaluation Dossier</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#e8e0cc;
+    --paper-dark:#ddd3ba;
+    --card:#f3ede0;
+    --ink:#2b2620;
+    --ink-soft:#5a5346;
+    --verified:#2f6b4f;
+    --verified-bg:#dfe8de;
+    --fake:#a63a2e;
+    --fake-bg:#ecdcd6;
+    --flood:#2c5c73;
+    --amber:#a8721f;
+    --amber-bg:#f1e2c4;
+    --rule:#c9bc9c;
+    --shadow: 2px 3px 0 rgba(43,38,32,0.12);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      repeating-linear-gradient(0deg, rgba(43,38,32,0.025) 0px, transparent 1px, transparent 3px),
+      var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+  .wrap{max-width:1180px; margin:0 auto; padding:2.5rem 1.5rem 5rem;}
+
+  /* header */
+  .eyebrow{
+    font-family:'Special Elite', monospace;
+    font-size:11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--flood);
+    display:flex; align-items:center; gap:0.6em;
+  }
+  .eyebrow::before{content:"◆"; font-size:9px;}
+  h1{
+    font-family:'Fraunces', serif;
+    font-weight:700;
+    font-size:clamp(28px, 4vw, 44px);
+    line-height:1.05;
+    margin:0.35em 0 0.2em;
+    letter-spacing:-0.01em;
+  }
+  .sub{color:var(--ink-soft); font-size:15px; max-width:56ch; margin-bottom:1.75rem;}
+
+  /* investigator note — the signature element */
+  .note{
+    position:relative;
+    background:#f6efd8;
+    border:1px solid var(--rule);
+    box-shadow: var(--shadow);
+    padding:1.35rem 1.5rem 1.5rem;
+    margin:0 0 2.5rem;
+    max-width:840px;
+    transform:rotate(-0.4deg);
+  }
+  .note::before{
+    content:"PINNED NOTE";
+    position:absolute; top:-11px; left:24px;
+    background:var(--amber-bg); color:var(--amber);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px; letter-spacing:0.1em; font-weight:600;
+    padding:2px 8px; border:1px solid var(--rule);
+  }
+  .note h3{
+    font-family:'Special Elite', monospace;
+    font-size:14px; text-transform:uppercase; letter-spacing:0.05em;
+    color:var(--fake); margin:0.2em 0 0.6em;
+  }
+  .note p{margin:0 0 0.7em; font-size:14.5px;}
+  .note p:last-child{margin-bottom:0;}
+  .note .tag{
+    font-family:'IBM Plex Mono', monospace; font-size:11.5px;
+    background:var(--fake-bg); color:var(--fake);
+    padding:1px 6px; border-radius:2px;
+  }
+
+  /* summary strip */
+  .strip{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:1px;
+    background:var(--rule); border:1px solid var(--rule);
+    margin-bottom:2.5rem;
+  }
+  .stat{background:var(--card); padding:1.1rem 1.2rem;}
+  .stat .num{font-family:'IBM Plex Mono', monospace; font-size:26px; font-weight:600;}
+  .stat .lbl{font-size:11.5px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.06em; margin-top:2px;}
+  .stat.flagged .num::after{content:" *"; color:var(--amber);}
+
+  /* layout */
+  .grid{display:grid; grid-template-columns:1.55fr 1fr; gap:2rem; align-items:start;}
+  @media (max-width:880px){ .grid{grid-template-columns:1fr;} }
+
+  .section-title{
+    font-family:'Special Elite', monospace;
+    font-size:12px; text-transform:uppercase; letter-spacing:0.1em;
+    color:var(--ink-soft);
+    display:flex; align-items:center; gap:0.8em;
+    margin-bottom:1rem;
+  }
+  .section-title::after{content:""; flex:1; height:1px; background:var(--rule);}
+
+  /* evidence cards */
+  .card{
+    background:var(--card);
+    border:1px solid var(--rule);
+    box-shadow: var(--shadow);
+    padding:1.1rem 1.2rem 1.2rem;
+    margin-bottom:1rem;
+  }
+  .card.wrong{border-color:var(--amber); box-shadow:2px 3px 0 rgba(168,114,31,0.25);}
+  .card-top{display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; margin-bottom:0.55rem;}
+  .exhibit{font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--ink-soft);}
+  .stamp{
+    font-family:'Special Elite', monospace;
+    font-size:11px; letter-spacing:0.08em; text-transform:uppercase;
+    padding:2px 8px; border:1.5px solid; border-radius:2px;
+    transform:rotate(-3deg); white-space:nowrap;
+  }
+  .stamp.true{color:var(--verified); border-color:var(--verified); background:var(--verified-bg);}
+  .stamp.fake{color:var(--fake); border-color:var(--fake); background:var(--fake-bg);}
+  .claim-text{font-size:15px; margin:0.4rem 0 0.7rem;}
+  .meta-row{
+    display:flex; flex-wrap:wrap; gap:0.4em 1.1em;
+    font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--ink-soft);
+    border-top:1px dashed var(--rule); padding-top:0.55rem;
+  }
+  .verdict-row{
+    display:flex; align-items:center; gap:0.7em; margin-top:0.7rem;
+    font-size:12.5px;
+  }
+  .prob-bar{flex:1; height:6px; background:var(--paper-dark); position:relative; border-radius:3px; overflow:hidden;}
+  .prob-fill{position:absolute; left:0; top:0; bottom:0; background:var(--flood); border-radius:3px;}
+  .wrong-flag{
+    font-family:'IBM Plex Mono', monospace; font-size:10.5px; color:var(--amber);
+    text-transform:uppercase; letter-spacing:0.06em; margin-top:0.5rem;
+  }
+
+  /* sidebar */
+  .side-block{
+    background:var(--card); border:1px solid var(--rule); box-shadow:var(--shadow);
+    padding:1.1rem 1.2rem 1.3rem; margin-bottom:1.5rem;
+  }
+  .cm-table{width:100%; border-collapse:collapse; font-family:'IBM Plex Mono', monospace; font-size:12.5px; margin-top:0.6rem;}
+  .cm-table th, .cm-table td{border:1px solid var(--rule); padding:6px 8px; text-align:center;}
+  .cm-table th{background:var(--paper-dark); font-weight:600; font-size:10.5px; text-transform:uppercase;}
+  .cm-table td.hit{background:var(--verified-bg); color:var(--verified); font-weight:600;}
+  .cm-table td.miss{background:var(--fake-bg); color:var(--fake); font-weight:600;}
+  .metric-line{display:flex; justify-content:space-between; font-size:13px; padding:5px 0; border-bottom:1px solid var(--rule);}
+  .metric-line:last-child{border-bottom:none;}
+  .metric-line .v{font-family:'IBM Plex Mono', monospace; font-weight:600;}
+  .roadmap-item{font-size:13px; padding:6px 0; border-bottom:1px dashed var(--rule); display:flex; gap:0.6em;}
+  .roadmap-item:last-child{border-bottom:none;}
+  .roadmap-item .dot{width:6px; height:6px; border-radius:50%; background:var(--rule); margin-top:6px; flex-shrink:0;}
+  .roadmap-item.next .dot{background:var(--flood);}
+
+  footer{margin-top:3rem; padding-top:1.2rem; border-top:1px solid var(--rule); font-size:12px; color:var(--ink-soft); font-family:'IBM Plex Mono', monospace;}
+
+  @media (prefers-reduced-motion: no-preference){
+    .card{animation: settle 0.4s ease-out backwards;}
+  }
+  @keyframes settle{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+
+  :focus-visible{ outline:2px solid var(--flood); outline-offset:2px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow">Hyperlocal Misinformation Tracker — Prototype Build</div>
+  <h1>Disaster Claims — Evaluation Dossier</h1>
+  <p class="sub">A static review of the baseline classifier's real predictions on 179 held-out disaster-related claims from IFND. This is not a live system — there is no ingestion pipeline or geo-resolution running behind this page yet.</p>
+
+  <div class="note">
+    <h3>⚠ On the accuracy numbers below</h3>
+    <p>The classifier scores <span class="tag">98.9% accuracy</span> on this test set — but that number is inflated. IFND's source column predicts the label almost perfectly on its own (fact-checker outlets are ~100% "Fake," mainstream outlets ~100% "TRUE"), so the model has partly learned to recognize <em>fact-check headline phrasing</em> ("Fact Check: Video Shared As...") rather than the underlying truth of each claim.</p>
+    <p>Treat this dossier as a diagnostic of the classifier's current behavior, not a validated accuracy figure. The real test happens once this model runs against plain Reddit/Telegram posts, which won't carry fact-check-style framing.</p>
+  </div>
+
+  <div class="strip">
+    <div class="stat"><div class="num">894</div><div class="lbl">Disaster-relevant claims</div></div>
+    <div class="stat"><div class="num">179</div><div class="lbl">Held-out test set</div></div>
+    <div class="stat flagged"><div class="num">98.9%</div><div class="lbl">Test accuracy</div></div>
+    <div class="stat"><div class="num">2 / 179</div><div class="lbl">Misclassified</div></div>
+  </div>
+
+  <div class="grid">
+    <div>
+      <div class="section-title">Evidence log — sample verdicts</div>
+      <div id="cards"></div>
+    </div>
+
+    <div>
+      <div class="side-block">
+        <div class="section-title" style="margin-bottom:0.5rem;">Confusion matrix</div>
+        <table class="cm-table">
+          <tr><th></th><th>Pred. Fake</th><th>Pred. True</th></tr>
+          <tr><th>Actual Fake</th><td class="hit">74</td><td class="miss">2</td></tr>
+          <tr><th>Actual True</th><td class="miss">0</td><td class="hit">103</td></tr>
+        </table>
+      </div>
+
+      <div class="side-block">
+        <div class="section-title" style="margin-bottom:0.4rem;">Per-class metrics</div>
+        <div class="metric-line"><span>Fake — precision</span><span class="v">1.00</span></div>
+        <div class="metric-line"><span>Fake — recall</span><span class="v">0.97</span></div>
+        <div class="metric-line"><span>Fake — F1</span><span class="v">0.99</span></div>
+        <div class="metric-line"><span>True — precision</span><span class="v">0.98</span></div>
+        <div class="metric-line"><span>True — recall</span><span class="v">1.00</span></div>
+        <div class="metric-line"><span>True — F1</span><span class="v">0.99</span></div>
+        <div class="metric-line"><span>Macro F1</span><span class="v">0.989</span></div>
+      </div>
+
+      <div class="side-block">
+        <div class="section-title" style="margin-bottom:0.4rem;">Not built yet</div>
+        <div class="roadmap-item next"><div class="dot"></div><div>Reddit / Telegram live collection — waiting on your API credentials</div></div>
+        <div class="roadmap-item next"><div class="dot"></div><div>Geo-resolution (NER + gazetteer) — no location data exists in this dossier</div></div>
+        <div class="roadmap-item"><div class="dot"></div><div>Hindi / regional-language coverage — IFND turned out English-only</div></div>
+        <div class="roadmap-item"><div class="dot"></div><div>Real-world eval on non-headline social text</div></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>Source: data/processed/ifnd_disaster_subset.parquet · Model: TF-IDF + Logistic Regression (baseline_a) · Generated from real predict_proba output, not illustrative values.</footer>
+</div>
+
+<script>
+const samples = [{"Statement": "No, MS Dhoni did not donate 5 crore to Assam flood...", "Label": "Fake", "pred_label": "TRUE", "pred_prob_true": 0.5844348607175658, "Web": "NEWSMOBILE", "Category": "COVID-19", "Date": "19-Jul", "correct": false}, {"Statement": "Flood gauges removed from Jehlum, installed in streets", "Label": "Fake", "pred_label": "TRUE", "pred_prob_true": 0.73136783009093, "Web": "AUGMENT", "Category": "POLITICS", "Date": NaN, "correct": false}, {"Statement": "Punjab death toll rises to 47", "Label": "TRUE", "pred_label": "TRUE", "pred_prob_true": 0.8928228399419704, "Web": "TRIBUNEINDIA", "Category": "COVID-19", "Date": "Jun-20", "correct": true}, {"Statement": "Covid-19: Special evacuation flights for Indians stuck in US to operate this week", "Label": "TRUE", "pred_label": "TRUE", "pred_prob_true": 0.7314550507126192, "Web": "TRIBUNEINDIA", "Category": "COVID-19", "Date": "May-20", "correct": true}, {"Statement": "Navy despatches two warships to Maldives for evacuation", "Label": "TRUE", "pred_label": "TRUE", "pred_prob_true": 0.7826205324996943, "Web": "TRIBUNEINDIA", "Category": "POLITICS", "Date": "May-20", "correct": true}, {"Statement": "West Bengal seeks army support for immediate restoration of infrastructure hit by cyclone Amphan", "Label": "TRUE", "pred_label": "TRUE", "pred_prob_true": 0.7577713181643164, "Web": "THESTATESMAN", "Category": "GOVERNMENT", "Date": "May-20", "correct": true}, {"Statement": "Bihar poll run-up: Amid RJD flood focus, JD(U) hopes Rs 960-cr relief will address anger", "Label": "TRUE", "pred_label": "TRUE", "pred_prob_true": 0.6923743818204673, "Web": "INDIANEXPRESS", "Category": "GOVERNMENT", "Date": "Aug-20", "correct": true}, {"Statement": "No earthquake in Hampi, was false alarm by software: Karnataka Natural Disaster Monitoring Centre", "Label": "TRUE", "pred_label": "TRUE", "pred_prob_true": 0.6176543223124769, "Web": "THESTATESMAN", "Category": "TERROR", "Date": "Jun-20", "correct": true}, {"Statement": "UP government sends 200 buses to Kota to evacuate students stranded due to lockdown", "Label": "TRUE", "pred_label": "TRUE", "pred_prob_true": 0.7384677442777152, "Web": "THESTATEMAN", "Category": "GOVERNMENT", "Date": "Apr-20", "correct": true}, {"Statement": "Tributes paid to CRPF\u00d5s DIG, constable killed in landslide", "Label": "TRUE", "pred_label": "TRUE", "pred_prob_true": 0.7226317810576421, "Web": "THESTATESMAN", "Category": "TERROR", "Date": "Dec-19", "correct": true}, {"Statement": "Is that a \u00d2Tsunami\u00d3 of support at Modi-Shah rally? No, it is a morphed image", "Label": "Fake", "pred_label": "Fake", "pred_prob_true": 0.46974829571765137, "Web": "AUGMENT", "Category": "POLITICS", "Date": NaN, "correct": true}, {"Statement": "Karnataka CM Kumaraswamy didn\u0092t only read the newspaper during Kerala flood...", "Label": "Fake", "pred_label": "Fake", "pred_prob_true": 0.3629343550897999, "Web": "NEWSMOBILE", "Category": "MISLEADING", "Date": "18-Aug", "correct": true}, {"Statement": "Fact Check: 2013 Picture Of RSS Relief Work Following Uttarakhand Floods...", "Label": "Fake", "pred_label": "Fake", "pred_prob_true": 0.25873881945722826, "Web": "NEWSMOBILE", "Category": "VIOLENCE", "Date": "21-Feb", "correct": true}, {"Statement": "Rahul Gandhi shares old images as 2019 Assam floods", "Label": "Fake", "pred_label": "Fake", "pred_prob_true": 0.3100162114168062, "Web": "AUGMENT", "Category": "VIOLENCE", "Date": NaN, "correct": true}, {"Statement": "Video Of Protests In Spain Over COVID-19 Restrictions Peddled As.Croatia Earthquake Pics Peddled As Italy Overwhelmed With COVID-19...", "Label": "Fake", "pred_label": "Fake", "pred_prob_true": 0.35390645903463974, "Web": "AUGMENT", "Category": "COVID-19", "Date": NaN, "correct": true}, {"Statement": "Fact Check: Former IPS officer uses old picture to target PM Modi as Kerala battles flood.Fact Check: Ex-IPS Officer Targets PM Modi, Shares Fake Image Of Kerala Floods", "Label": "Fake", "pred_label": "Fake", "pred_prob_true": 0.11111160866716836, "Web": "AUGMENT", "Category": "GOVERNMENT", "Date": NaN, "correct": true}, {"Statement": "Fact Check: Liquor bottles for flood victims in Thailand linked to Bihar polls", "Label": "Fake", "pred_label": "Fake", "pred_prob_true": 0.2724039619823639, "Web": "AUGMENT", "Category": "COVID-19", "Date": NaN, "correct": true}, {"Statement": "Fact Check: Viral video of Statue of Unity gallery getting flooded due to rainwater is MISLEADING", "Label": "Fake", "pred_label": "Fake", "pred_prob_true": 0.03252284752751608, "Web": "NEWSMETER", "Category": "MISLEADING", "Date": "20-Jul", "correct": true}];
+
+const cardsEl = document.getElementById('cards');
+samples.forEach((s, i) => {
+  const isWrong = !s.correct;
+  const trueLabel = s.Label === 'TRUE' ? 'true' : 'fake';
+  const predLabel = s.pred_label === 'TRUE' ? 'true' : 'fake';
+  const prob = Math.round(s.pred_prob_true * 100);
+
+  const card = document.createElement('div');
+  card.className = 'card' + (isWrong ? ' wrong' : '');
+  card.style.animationDelay = (i * 0.03) + 's';
+
+  card.innerHTML = `
+    <div class="card-top">
+      <span class="exhibit">EXHIBIT ${String(i+1).padStart(2,'0')} · ${s.Web || 'unknown source'} · ${s.Category || '—'}</span>
+      <span class="stamp ${trueLabel}">${s.Label === 'TRUE' ? 'Verified True' : 'Debunked'}</span>
+    </div>
+    <p class="claim-text">${s.Statement}</p>
+    <div class="verdict-row">
+      <span>Model: <strong>${s.pred_label}</strong></span>
+      <div class="prob-bar"><div class="prob-fill" style="width:${prob}%"></div></div>
+      <span>${prob}% P(true)</span>
+    </div>
+    <div class="meta-row"><span>DATE: ${s.Date || 'n/a'}</span></div>
+    ${isWrong ? `<div class="wrong-flag">✗ misclassified — model said "${s.pred_label}", actually "${s.Label}"</div>` : ''}
+  `;
+  cardsEl.appendChild(card);
+});
+</script>
+</body>
+</html>

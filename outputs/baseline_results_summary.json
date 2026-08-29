@@ -1,0 +1,21 @@
+{
+  "disaster_subset_size": 894,
+  "disaster_subset_label_counts": {
+    "TRUE": 512,
+    "Fake": 382
+  },
+  "baseline_A_disaster_only_trained": {
+    "test_size": 179,
+    "macro_f1": 0.9885256410256411,
+    "accuracy": 0.9888268156424581,
+    "fake_f1": 0.9866666666666667,
+    "true_f1": 0.9903846153846154
+  },
+  "baseline_B_general_trained_eval_on_disaster": {
+    "test_size": 179,
+    "macro_f1": 0.9769626769626769,
+    "accuracy": 0.9776536312849162,
+    "fake_f1": 0.972972972972973,
+    "true_f1": 0.9809523809523809
+  }
+}

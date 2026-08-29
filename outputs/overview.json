@@ -1,0 +1,51 @@
+{
+  "total_ifnd": 56714,
+  "disaster_subset": 894,
+  "label_counts": {
+    "TRUE": 512,
+    "Fake": 382
+  },
+  "category_counts": {
+    "VIOLENCE": 272,
+    "GOVERNMENT": 200,
+    "COVID-19": 157,
+    "MISLEADING": 96,
+    "POLITICS": 90,
+    "TERROR": 44,
+    "ELECTION": 22,
+    "TRAD": 13
+  },
+  "source_counts": {
+    "AUGMENT": 248,
+    "TRIBUNEINDIA": 187,
+    "THESTATESMAN": 166,
+    "THESTATEMAN": 58,
+    "THEPRINT": 51,
+    "NEWSMOBILE": 41,
+    "INDIATODAY": 37,
+    "INDIANEXPRESS": 36,
+    "BOOMLIVE": 19,
+    "NEWSMETER": 13,
+    "AFP": 7,
+    "TIMESNOW": 6,
+    "FACTCRESCENDO": 6,
+    "THELOGICALINDIA": 4,
+    "CNN": 3,
+    "TEEKHIMIRCHI": 3,
+    "BSMEDIA": 2,
+    "DIGITEYE": 2,
+    "ONEINDIA": 2,
+    "DNAINDIA": 1,
+    "DAPAAN": 1,
+    "THELOGICALINDIAN": 1
+  },
+  "test_size": 179,
+  "accuracy": 0.9888,
+  "macro_f1": 0.9885,
+  "confusion_matrix": {
+    "fake_fake": 74,
+    "fake_true": 2,
+    "true_fake": 0,
+    "true_true": 103
+  }
+}
