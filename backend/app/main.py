@@ -17,7 +17,7 @@ from app.db.base import Base
 from app.db.session import engine
 from app.db import models  # noqa: F401 -- import registers all tables on Base.metadata before create_all runs
 from app.external_feeds.scheduler import start_scheduler, stop_scheduler
-from app.routers import alerts, claims, feeds, health
+from app.routers import alerts, claims, feeds, health, map as map_router, stats
 
 logging.basicConfig(level=logging.INFO)
 
@@ -54,3 +54,5 @@ app.include_router(health.router)
 app.include_router(claims.router)
 app.include_router(feeds.router)
 app.include_router(alerts.router)
+app.include_router(stats.router)
+app.include_router(map_router.router)
