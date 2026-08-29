@@ -1,5 +1,17 @@
 pandas
 pyarrow
-scikit-learn
+scikit-learn==1.8.0  # pinned: outputs/baseline_a_*.joblib were pickled under 1.8.0
 joblib
 streamlit
+
+# backend (FastAPI + DB) -- see backend/app/
+fastapi
+uvicorn[standard]
+sqlalchemy
+pydantic-settings
+requests
+apscheduler
+
+# testing
+pytest
+httpx

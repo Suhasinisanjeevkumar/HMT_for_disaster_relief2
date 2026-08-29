@@ -33,6 +33,10 @@ def analyze_claim(text: str) -> dict:
     location_level = loc_best.match_level if loc_best else None
     disaster_type = disaster.primary_type if disaster.is_disaster_related else "None"
 
+    def _best_key(m):
+        return (m.locality, m.city, m.district, m.state)
+    best_key = _best_key(loc_best) if loc_best else None
+
     priority = score_priority(text, disaster_type, location_level, misinfo.label)
 
     reason_parts = []
@@ -57,13 +61,28 @@ def analyze_claim(text: str) -> dict:
             "district": loc_best.district, "state": loc_best.state,
             "match_level": loc_best.match_level,
         } if loc_best else None,
-        "all_locations": [{"text": m.matched_text, "state": m.state, "level": m.match_level} for m in location.locations],
+        # Each entry below keeps the original "text"/"state"/"level" keys
+        # unchanged (existing callers -- print_result, dashboard/app.py --
+        # only read those) and additively includes the rest of the
+        # LocationMatch breakdown, needed by the backend to persist one
+        # full Location row per mention rather than just the primary one.
+        "all_locations": [
+            {
+                "text": m.matched_text, "state": m.state, "level": m.match_level,
+                "locality": m.locality, "city": m.city, "district": m.district,
+                "match_type": m.match_type, "confidence": m.confidence,
+                "is_primary": bool(loc_best) and _best_key(m) == best_key,
+            }
+            for m in location.locations
+        ],
         "prediction": misinfo.label,
         "confidence": f"{misinfo.confidence:.0%}",
+        "confidence_raw": misinfo.confidence,  # additive: raw 0-1 float, for callers that need a number not a string
         "top_terms": misinfo.top_terms,
         "verification": {
             "matched": verification.matched,
             "similarity": f"{verification.similarity:.0%}",
+            "similarity_raw": verification.similarity,  # additive: raw 0-1 float
             "matched_claim": verification.matched_claim,
             "note": verification.source_note,
         },
